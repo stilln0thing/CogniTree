@@ -8,8 +8,12 @@ import asyncio
 from typing import Dict, Any, List, Optional
 from langchain_core.messages import SystemMessage, AIMessage, HumanMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
+
+from python_backend.logger import setup_logger
 from python_backend.engine.state import AgentState
 from python_backend.tools.registry import OPENAI_TOOL_SCHEMAS
+
+logger = setup_logger("cognitree.engine.nodes.agent")
 
 SYSTEM_PROMPT = """You are CogniTree, an enterprise-grade autonomous AI assistant.
 You help users solve complex tasks using step-by-step reasoning, tool execution, and clear markdown output.
@@ -26,10 +30,12 @@ def get_llm_client():
     api_key = os.getenv("OPENAI_API_KEY")
     if api_key:
         model_name = os.getenv("MODEL", "gpt-4o-mini")
+        logger.info("Configured AsyncOpenAI client using OpenAI Cloud API key for model '%s'", model_name)
         return AsyncOpenAI(api_key=api_key), model_name
     else:
         ollama_url = os.getenv("OLLAMA_HOST", "http://localhost:11434/v1")
         model_name = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
+        logger.info("Configured AsyncOpenAI client using local Ollama endpoint '%s' for model '%s'", ollama_url, model_name)
         return AsyncOpenAI(base_url=ollama_url, api_key="ollama"), model_name
 
 
@@ -39,6 +45,7 @@ async def agent_node(state: AgentState, config: Optional[RunnableConfig] = None)
     """
     messages = list(state.get("messages", []))
     iteration = state.get("iteration", 0) + 1
+    logger.info("Executing agent_node turn (iteration=%d, message_history_length=%d)", iteration, len(messages))
     
     if not messages or not isinstance(messages[0], SystemMessage):
         messages.insert(0, SystemMessage(content=SYSTEM_PROMPT))
@@ -79,7 +86,7 @@ async def agent_node(state: AgentState, config: Optional[RunnableConfig] = None)
                     "content": msg.content
                 })
 
-        # Call model with tool schemas passed!
+        logger.info("Invoking model '%s' with %d messages and %d registered tool schemas.", model_name, len(oai_messages), len(OPENAI_TOOL_SCHEMAS))
         response = await client.chat.completions.create(
             model=model_name,
             messages=oai_messages,
@@ -102,20 +109,23 @@ async def agent_node(state: AgentState, config: Optional[RunnableConfig] = None)
                     "name": tc.function.name,
                     "args": parsed_args
                 })
+            logger.info("Model requested tool execution for tools: %s", [tc["name"] for tc in tool_calls])
 
         if can_enqueue and ai_content:
             await queue.put(("token", ai_content))
 
+        logger.info("agent_node completed successfully. Response length: %d chars.", len(ai_content))
         return {
             "messages": [AIMessage(content=ai_content, tool_calls=tool_calls)],
             "iteration": iteration
         }
 
     except Exception as err:
+        logger.error("Error encountered in agent_node during model invocation: %s", str(err), exc_info=True)
         error_text = f"Error during model invocation ({str(err)})"
         if can_enqueue:
             await queue.put(("error", error_text))
         return {
-            "messages": [AIMessage(content=f"⚠️ {error_text}")],
+            "messages": [AIMessage(content=f"{error_text}")],
             "iteration": iteration
         }

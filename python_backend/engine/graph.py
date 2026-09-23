@@ -8,19 +8,22 @@ from langchain_core.messages import BaseMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import StateGraph, END
 
+from python_backend.logger import setup_logger
 from python_backend.engine.state import AgentState
 from python_backend.engine.nodes.planner import planner_node
 from python_backend.engine.nodes.agent import agent_node
 from python_backend.engine.nodes.tools import tools_node
 from python_backend.engine.nodes.evaluator import should_continue, recovery_node, evaluator_node
 
+logger = setup_logger("cognitree.engine.graph")
+
 
 def build_graph(checkpointer: Optional[Any] = None) -> Any:
     """
     Constructs and compiles the multi-node StateGraph:
     planner -> agent -> should_continue -> (tools -> agent | recovery -> agent | END)
-    Attaches checkpointer for stateful time-travel checkpoints if provided.
     """
+    logger.info("Initializing multi-node StateGraph workflow compilation.")
     workflow = StateGraph(AgentState)
 
     workflow.add_node("planner", planner_node)
@@ -44,7 +47,9 @@ def build_graph(checkpointer: Optional[Any] = None) -> Any:
     workflow.add_edge("tools", "agent")
     workflow.add_edge("recovery", "agent")
 
-    return workflow.compile(checkpointer=checkpointer)
+    compiled = workflow.compile(checkpointer=checkpointer)
+    logger.info("Multi-node StateGraph workflow compiled successfully.")
+    return compiled
 
 
 compiled_graph = build_graph()
@@ -54,6 +59,7 @@ def set_compiled_graph(graph: Any) -> None:
     """Updates active compiled graph instance."""
     global compiled_graph
     compiled_graph = graph
+    logger.info("Updated active compiled graph instance with new checkpointer.")
 
 
 def get_compiled_graph() -> Any:
@@ -68,11 +74,9 @@ async def stream_graph_execution(
     checkpoint_id: Optional[str] = None
 ) -> List[BaseMessage]:
     """
-    Executes the multi-node graph with stateful checkpoints:
-    - Passes delta_state (new turn messages only)
-    - Points configurable['checkpoint_id'] to checkpoint_id when branching
-    - Pushes events to queue ('token', 'tool_start', 'tool_done', 'done', 'error')
+    Executes the multi-node graph with stateful checkpoints and logging.
     """
+    logger.info("Beginning graph execution for thread_id='%s', checkpoint_id='%s'", thread_id, checkpoint_id)
     configurable: Dict[str, Any] = {"queue": queue}
     if thread_id:
         configurable["thread_id"] = thread_id
@@ -85,9 +89,11 @@ async def stream_graph_execution(
         graph = get_compiled_graph()
         final_state = await graph.ainvoke(delta_state, config=config)
         messages = final_state.get("messages", [])
+        logger.info("Graph execution completed successfully. Output messages count: %d", len(messages))
         await queue.put(("done", messages))
         return messages
     except Exception as exc:
+        logger.error("Graph execution encountered failure: %s", str(exc), exc_info=True)
         await queue.put(("error", str(exc)))
         return delta_state.get("messages", [])
     finally:

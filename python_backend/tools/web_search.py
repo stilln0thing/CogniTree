@@ -1,5 +1,5 @@
 """
-web_search.py — Free internet search tool using DuckDuckGo.
+web_search.py — Free internet search tool using DuckDuckGo / ddgs.
 """
 
 from langchain_core.tools import tool
@@ -10,7 +10,11 @@ from python_backend.tools.security import sanitize_output
 def web_search(query: str, max_results: int = 5) -> str:
     """Performs a live web search using DuckDuckGo and returns snippet summaries."""
     try:
-        from duckduckgo_search import DDGS
+        try:
+            from ddgs import DDGS
+        except ImportError:
+            from duckduckgo_search import DDGS
+
         with DDGS() as ddgs:
             results = list(ddgs.text(query, max_results=max_results))
             if not results:

@@ -6,8 +6,12 @@ import json
 from typing import Dict, Any, List, Optional
 from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
+
+from python_backend.logger import setup_logger
 from python_backend.engine.state import AgentState
 from python_backend.tools.registry import execute_tool_by_name
+
+logger = setup_logger("cognitree.engine.nodes.tools")
 
 
 async def tools_node(state: AgentState, config: Optional[RunnableConfig] = None) -> Dict[str, Any]:
@@ -20,6 +24,7 @@ async def tools_node(state: AgentState, config: Optional[RunnableConfig] = None)
 
     last_msg = messages[-1]
     if not isinstance(last_msg, AIMessage) or not hasattr(last_msg, "tool_calls") or not last_msg.tool_calls:
+        logger.info("tools_node called but no tool_calls requested in last message.")
         return {}
 
     queue = None
@@ -31,16 +36,19 @@ async def tools_node(state: AgentState, config: Optional[RunnableConfig] = None)
     can_enqueue = queue is not None and hasattr(queue, "put") and callable(queue.put)
 
     tool_results = []
+    logger.info("Executing %d tool call(s) in tools_node.", len(last_msg.tool_calls))
+    
     for tool_call in last_msg.tool_calls:
         tool_name = tool_call.get("name")
         tool_args = tool_call.get("args", {})
         call_id = tool_call.get("id", "call_default")
 
+        logger.info("Dispatching tool '%s' with arguments: %s", tool_name, json.dumps(tool_args))
         if can_enqueue:
             await queue.put(("tool_start", {"name": tool_name, "args": tool_args}))
 
-        # Dispatch real tool execution!
         result_output = execute_tool_by_name(tool_name, tool_args)
+        logger.info("Tool '%s' completed execution. Result output size: %d chars.", tool_name, len(result_output))
 
         if can_enqueue:
             await queue.put(("tool_done", {"name": tool_name, "result": result_output}))

@@ -2,7 +2,11 @@
 main.py — FastAPI Gateway entrypoint for CogniTree backend server.
 """
 
+import sys
 import os
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,7 +21,6 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Enable CORS for cross-origin client access
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -26,11 +29,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include API routes
 app.include_router(rest_router)
 app.include_router(ws_router)
 
-# Mount web UI static files if directory exists
 web_ui_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../web_ui"))
 if os.path.exists(web_ui_dir):
     app.mount("/ui", StaticFiles(directory=web_ui_dir, html=True), name="web_ui")
