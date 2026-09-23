@@ -30,7 +30,7 @@ def tombstone_failed_retries(messages: List[BaseMessage]) -> List[BaseMessage]:
         if isinstance(msg, ToolMessage) and ("error" in msg.content.lower() or "exception" in msg.content.lower()):
             # If the next message is a successful ToolMessage for the same tool, tombstone the current error
             if isinstance(next_msg, ToolMessage) and next_msg.name == msg.name and "error" not in next_msg.content.lower():
-                tombstone_content = f"🪦 [TOMBSTONE: Resolved error trace for tool '{msg.name}']"
+                tombstone_content = f"[TOMBSTONE: Resolved error trace for tool '{msg.name}']"
                 pruned_messages[i] = ToolMessage(
                     content=tombstone_content,
                     name=msg.name,

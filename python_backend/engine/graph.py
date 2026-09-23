@@ -5,6 +5,7 @@ graph.py — Multi-node LangGraph compilation and execution streaming.
 import asyncio
 from typing import Any, Optional, Dict, List
 from langchain_core.messages import BaseMessage
+from langchain_core.runnables import RunnableConfig
 from langgraph.graph import StateGraph, END
 
 from python_backend.engine.state import AgentState

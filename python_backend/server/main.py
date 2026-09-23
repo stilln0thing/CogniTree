@@ -39,8 +39,8 @@ if os.path.exists(web_ui_dir):
 def start():
     """Launches Uvicorn development server."""
     port = int(os.getenv("PORT", "8765"))
-    print(f"🌿 Starting CogniTree FastAPI server on http://localhost:{port} ...")
-    print(f"🌐 Web UI Canvas available at http://localhost:{port}/ui")
+    print(f"Starting CogniTree FastAPI server on http://localhost:{port} ...")
+    print(f"Web UI Canvas available at http://localhost:{port}/ui")
     uvicorn.run("python_backend.server.main:app", host="0.0.0.0", port=port, reload=False)
 
 

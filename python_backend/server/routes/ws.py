@@ -18,7 +18,7 @@ async def websocket_endpoint(websocket: WebSocket):
     tool execution status updates, and decision tree state checkpointing.
     """
     await websocket.accept()
-    print("🔌 Client connected to WebSocket /ws")
+    print("Client connected to WebSocket /ws")
 
     try:
         while True:
