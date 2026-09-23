@@ -501,6 +501,7 @@ button { font-family: inherit; cursor: pointer; }
 .sidebar-section {
   padding: 1rem 0.75rem 0;
   flex: 1;
+  min-height: 0;       /* allows the section to shrink below content height */
   overflow-y: auto;
 }
 
@@ -534,7 +535,7 @@ button { font-family: inherit; cursor: pointer; }
 .thread-item svg { flex-shrink: 0; }
 
 .sidebar-bottom {
-  flex: 0;
+  flex-shrink: 0;       /* always pinned — never scrolls away */
   padding: 0.75rem;
   border-top: 1px solid var(--border);
   display: flex;
