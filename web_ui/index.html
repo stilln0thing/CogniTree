@@ -1,103 +1,393 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CogniTree — Stateful Decision Tree Agent</title>
-  <link rel="stylesheet" href="style.css">
+  <title>CogniTree — Autonomous AI Agent Engine</title>
+  <meta name="description" content="CogniTree is a stateful, tree-native autonomous AI agent engine with multi-node LangGraph orchestration, real-time streaming, and time-travel branching.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500;600;700;800;900&family=Geist+Mono:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="app">
-    <!-- Sidebar Navigation -->
-    <sidebar>
-      <div>
-        <div class="brand-header">
-          <div class="brand-icon">🌿</div>
-          <span>CogniTree</span>
-        </div>
 
-        <nav class="sidebar-nav">
-          <div class="nav-item active">
-            💬 Agent Chat Workspace
-          </div>
-          <div class="nav-item" id="nav-new-thread">
-            ➕ New Conversation
-          </div>
-          <div class="nav-item" id="nav-toggle-tree">
-            🌿 Decision Tree Canvas
-          </div>
-        </nav>
-      </div>
+  <!-- ========================================================= -->
+  <!-- LANDING PAGE                                               -->
+  <!-- ========================================================= -->
+  <div id="landing-page" class="page active">
 
-      <div class="status-card">
-        <div class="status-badge">
-          <span class="status-dot"></span>
-          <span>qwen2.5:7b (Ollama Local)</span>
-        </div>
-        <div style="color: var(--muted-foreground);">
-          FastAPI Backend: <strong>Connected</strong>
-        </div>
-      </div>
-    </sidebar>
+    <!-- Animated background layers -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
 
-    <!-- Main Workspace Area -->
-    <main>
-      <!-- Top Header -->
-      <header>
-        <div class="header-title">
-          Decision Tree Agent Workspace
-        </div>
-        <div class="header-actions">
-          <button class="btn" id="btn-toggle-panel">
-            🌿 Toggle Tree Canvas
-          </button>
-        </div>
-      </header>
-
-      <!-- Workspace Split Layout -->
-      <div class="workspace-split">
-        <!-- Chat Pane -->
-        <div class="chat-pane">
-          <div class="chat-messages" id="chat-messages">
-            <div class="message-wrapper assistant">
-              <div class="avatar assistant">CT</div>
-              <div class="message-content">
-                👋 Welcome to <strong>CogniTree</strong>! All your messages are tracked as state nodes on the decision tree. Ask any question or request a tool action to get started.
-              </div>
-            </div>
-          </div>
-
-          <div class="input-pane">
-            <div class="input-box">
-              <textarea id="prompt-input" placeholder="Ask CogniTree a question or request code..."></textarea>
-              <button class="btn btn-primary" id="send-button">
-                Send
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Interactive Decision Tree Pane -->
-        <div class="tree-pane" id="tree-pane">
-          <div class="tree-header">
-            <span style="font-weight: 600; font-size: 0.9rem;">🌿 Decision Tree Canvas</span>
-            <span style="font-size: 0.75rem; color: var(--muted-foreground);">Click node to rewind state</span>
-          </div>
-          <div class="tree-viewport" id="tree-viewport">
-            <svg id="tree-svg">
-              <defs>
-                <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"/>
-                </marker>
-              </defs>
-              <g id="tree-root-group"></g>
+    <!-- Top navigation -->
+    <nav class="nav">
+      <div class="nav-inner">
+        <div class="nav-brand">
+          <div class="brand-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
             </svg>
+          </div>
+          <span class="brand-name">CogniTree</span>
+        </div>
+        <div class="nav-actions">
+          <div class="status-badge">
+            <div class="status-dot"></div>
+            <span>Ollama · qwen2.5:7b</span>
+          </div>
+          <a href="https://github.com" target="_blank" class="nav-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+            </svg>
+            GitHub
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero section -->
+    <main class="hero">
+      <div class="hero-inner">
+        <!-- Announcement badge -->
+        <div class="announcement-badge">
+          <div class="badge-spark"></div>
+          <span>Multi-node LangGraph · Stateful Engine</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </div>
+
+        <!-- Main headline -->
+        <h1 class="hero-title">
+          Think deeper.<br>
+          <span class="title-gradient">Branch farther.</span>
+        </h1>
+
+        <p class="hero-desc">
+          An autonomous AI agent engine that orchestrates multi-node reasoning graphs, 
+          executes sandboxed tools, and lets you time-travel across any decision checkpoint.
+        </p>
+
+        <!-- CTA buttons -->
+        <div class="hero-actions">
+          <button id="start-convo-btn" class="btn-primary">
+            Start a Conversation
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </button>
+          <a href="#features" class="btn-ghost">
+            Explore architecture
+          </a>
+        </div>
+
+        <!-- Stats row -->
+        <div class="stats-row">
+          <div class="stat-item">
+            <div class="stat-number">4</div>
+            <div class="stat-label">Specialized Nodes</div>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <div class="stat-number">∞</div>
+            <div class="stat-label">Parallel Branches</div>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <div class="stat-number">0</div>
+            <div class="stat-label">API Costs</div>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <div class="stat-number">100%</div>
+            <div class="stat-label">Local Execution</div>
           </div>
         </div>
       </div>
     </main>
+
+    <!-- Feature grid -->
+    <section class="features" id="features">
+      <div class="features-inner">
+        <div class="section-label">Architecture</div>
+        <h2 class="section-title">Everything your agent needs</h2>
+
+        <div class="feature-grid">
+          <div class="feature-card feature-card--large">
+            <div class="feature-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">LangGraph State Engine</h3>
+            <p class="feature-desc">Multi-node graph with Planner, Agent, Tools, and Evaluator nodes working in concert. SQLite checkpoint persistence across every state transition.</p>
+            <div class="feature-tag">planner → agent → tools → eval</div>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">AST Security Jail</h3>
+            <p class="feature-desc">Pre-execution Python AST inspection blocks dangerous imports. Workspace path jailing and DLP secret masking at every layer.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                <path d="M3 12l9-9 9 9"/>
+                <path d="M9 21V12h6v9"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Time-Travel Branching</h3>
+            <p class="feature-desc">Rewind to any historical checkpoint and fork new parallel reasoning trees. Each branch is an independent conversation thread.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="M21 21l-4.35-4.35"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Hybrid pgvector RAG</h3>
+            <p class="feature-desc">PostgreSQL + pgvector with Reciprocal Rank Fusion (RRF) blending dense vector similarity and sparse keyword search.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Real-Time Streaming</h3>
+            <p class="feature-desc">FastAPI WebSocket gateway with token-level streaming. Watch the agent reason, plan, and execute in real-time.</p>
+          </div>
+
+          <div class="feature-card feature-card--large">
+            <div class="feature-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Built-in Tool Suite</h3>
+            <p class="feature-desc">Web search, file read/write, and local Python script execution — all jailed to your workspace and audited through structured logs.</p>
+            <div class="feature-tag">web_search · read_file · write_file · run_script</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- CHAT APP                                                   -->
+  <!-- ========================================================= -->
+  <div id="chat-page" class="page">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-brand">
+          <div class="brand-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <span>CogniTree</span>
+        </div>
+        <button id="new-thread-btn" class="sidebar-action-btn" title="New thread">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Threads</div>
+        <div id="thread-list">
+          <div class="thread-item active" id="thread-default">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span>Default thread</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-section sidebar-bottom">
+        <button id="back-to-home-btn" class="sidebar-nav-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          Back to home
+        </button>
+        <button id="toggle-canvas-btn" class="sidebar-nav-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="9" y1="3" x2="9" y2="21"/>
+          </svg>
+          Decision Canvas
+        </button>
+        <div class="sidebar-status">
+          <div class="status-dot"></div>
+          <span>qwen2.5:7b connected</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main chat area -->
+    <main class="chat-main">
+
+      <!-- Top bar -->
+      <div class="chat-topbar">
+        <div class="topbar-left">
+          <button id="toggle-sidebar-btn" class="icon-btn" title="Toggle sidebar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+          <span class="topbar-title">New conversation</span>
+        </div>
+        <div class="topbar-right">
+          <div class="model-badge">
+            <div class="model-dot"></div>
+            qwen2.5:7b
+          </div>
+        </div>
+      </div>
+
+      <!-- Message stream -->
+      <div class="message-stream" id="message-stream">
+        <!-- Greeting (shown when stream is empty) -->
+        <div class="greeting" id="greeting">
+          <h2 class="greeting-title">Hello, there.</h2>
+          <p class="greeting-sub">Ask me to reason, code, search, or execute — I'll branch through it all.</p>
+
+          <div class="suggestion-grid">
+            <button class="suggestion-btn" data-prompt="Write a Python script that calculates the first 15 Fibonacci numbers and run it.">
+              <div class="suggestion-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+                </svg>
+              </div>
+              <div>
+                <div class="suggestion-title">Run Python code</div>
+                <div class="suggestion-sub">Generate and execute a Fibonacci script</div>
+              </div>
+            </button>
+            <button class="suggestion-btn" data-prompt="Search the web for the most recent breakthrough in AI agent research in 2025.">
+              <div class="suggestion-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                </svg>
+              </div>
+              <div>
+                <div class="suggestion-title">Search the web</div>
+                <div class="suggestion-sub">Find recent AI agent breakthroughs</div>
+              </div>
+            </button>
+            <button class="suggestion-btn" data-prompt="Create a file named goals.txt with 5 ambitious startup ideas, then read it back.">
+              <div class="suggestion-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+              </div>
+              <div>
+                <div class="suggestion-title">File system tools</div>
+                <div class="suggestion-sub">Write and read a workspace file</div>
+              </div>
+            </button>
+            <button class="suggestion-btn" data-prompt="Try to run a script that imports ctypes and accesses system memory — show me the security guardrail in action.">
+              <div class="suggestion-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+              </div>
+              <div>
+                <div class="suggestion-title">Security guardrail</div>
+                <div class="suggestion-sub">Test the AST code jail block</div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input area -->
+      <div class="input-area">
+        <div class="input-box" id="input-box">
+          <textarea
+            id="prompt-input"
+            placeholder="Message CogniTree..."
+            rows="1"
+          ></textarea>
+          <div class="input-actions">
+            <button id="send-btn" class="send-btn" disabled>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="input-hint">CogniTree may make mistakes. Running locally with Ollama.</div>
+      </div>
+    </main>
+
+    <!-- Decision Tree Canvas Panel -->
+    <aside class="canvas-panel collapsed" id="canvas-panel">
+      <div class="canvas-panel-header">
+        <span class="canvas-panel-title">Decision Canvas</span>
+        <div class="canvas-panel-actions">
+          <span class="canvas-hint">Click node to time-travel</span>
+          <button id="close-canvas-btn" class="icon-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="canvas-body" id="tree-viewport-container">
+        <svg id="tree-canvas-svg" class="tree-svg">
+          <defs>
+            <filter id="node-glow">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <g id="tree-svg-root"></g>
+        </svg>
+        <div class="canvas-empty" id="canvas-empty">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+          </svg>
+          <p>Start a conversation to see<br>the decision tree grow here</p>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- Connection indicator (toast) -->
+  <div class="connection-toast" id="connection-toast">
+    <div class="toast-dot"></div>
+    <span id="toast-text">Connecting to server...</span>
   </div>
 
   <script src="tree.js"></script>
