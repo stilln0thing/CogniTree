@@ -42,13 +42,13 @@ Traditional AI assistants force users into linear, fragile chat threads where co
 │  │ - Dynamic CORS & 5h/24h Rolling Token Telemetry       │  │
 │  │ - REST Endpoints (/health), OpenAPI, & SSE Stream     │  │
 │  └───────────────────────────▲───────────────────────────┘  │
-│                              │                               │
+│                              │                              │
 │  ┌───────────────────────────▼───────────────────────────┐  │
 │  │ LangGraph Multi-Node Engine (python_backend/engine)   │  │
 │  │ - StateGraph: Planner -> Agent -> Evaluator -> Tools  │  │
 │  │ - Async Token Streaming via Ollama qwen2.5:7b         │  │
 │  │ - Dynamic Context Pruner (Tombstoning & Truncation)   │  │
-│  │ - Centralized Production Logger (Structured Formatting)│  │
+│  │ - Centralized Production Logger (Structured Formatting)│ │
 │  └───────────▲───────────────────▲───────────────────▲───┘  │
 │              │                   │                   │       │
 │  ┌───────────▼───────────┐ ┌─────▼───────────┐ ┌─────▼─────┐ │
