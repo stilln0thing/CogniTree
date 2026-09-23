@@ -1,0 +1,26 @@
+# FastAPI & Uvicorn Web Server
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.6.0
+websockets>=12.0
+
+# LangChain & LangGraph Core
+langgraph>=0.0.26
+langchain>=0.1.0
+langchain-core>=0.1.20
+langchain-openai>=0.0.5
+
+# OpenAI & Async Utilities
+openai>=1.12.0
+async-timeout>=4.0.3
+aiofiles>=23.2.1
+aiosqlite>=0.19.0
+
+# Vector & RAG Dependencies (Optional for Postgres)
+psycopg2-binary>=2.9.9
+pgvector>=0.2.4
+
+# Security & Utilities
+duckduckgo-search>=4.4.0
+tiktoken>=0.6.0
+python-dotenv>=1.0.0
