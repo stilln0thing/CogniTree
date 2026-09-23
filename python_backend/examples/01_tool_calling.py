@@ -85,7 +85,7 @@ def get_async_client() -> tuple[AsyncOpenAI, str]:
     else:
         print("🦙 Using Local FREE Ollama Model (http://localhost:11434/v1)")
         ollama_url = os.getenv("OLLAMA_HOST", "http://localhost:11434/v1")
-        model_name = os.getenv("OLLAMA_MODEL", "llama3.2")
+        model_name = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
         return AsyncOpenAI(base_url=ollama_url, api_key="ollama"), model_name
 
 

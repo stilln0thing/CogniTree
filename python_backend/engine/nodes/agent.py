@@ -17,7 +17,7 @@ When tools are available, call them accurately with valid arguments.
 def get_llm_client():
     """
     Detects environment settings and returns an AsyncOpenAI client configured for
-    either OpenAI Cloud or FREE local Ollama instance.
+    either OpenAI Cloud or FREE local Ollama instance (qwen2.5:7b).
     """
     from openai import AsyncOpenAI
     api_key = os.getenv("OPENAI_API_KEY")
@@ -25,7 +25,6 @@ def get_llm_client():
         model_name = os.getenv("MODEL", "gpt-4o-mini")
         return AsyncOpenAI(api_key=api_key), model_name
     else:
-        # Default to local Ollama (100% free)
         ollama_url = os.getenv("OLLAMA_HOST", "http://localhost:11434/v1")
         model_name = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
         return AsyncOpenAI(base_url=ollama_url, api_key="ollama"), model_name
@@ -48,7 +47,6 @@ async def agent_node(state: AgentState, config: Dict[str, Any] = None) -> Dict[s
     try:
         client, model_name = get_llm_client()
 
-        # Convert LangChain message history into standard API message format
         oai_messages = []
         for msg in messages:
             if isinstance(msg, SystemMessage):
@@ -74,7 +72,6 @@ async def agent_node(state: AgentState, config: Dict[str, Any] = None) -> Dict[s
                     "content": msg.content
                 })
 
-        # Call active model
         response = await client.chat.completions.create(
             model=model_name,
             messages=oai_messages
@@ -96,6 +93,6 @@ async def agent_node(state: AgentState, config: Dict[str, Any] = None) -> Dict[s
         if queue:
             await queue.put(("error", error_text))
         return {
-            "messages": [AIMessage(content=f"⚠️ {error_text}")],
+            "messages": [AIMessage(content=f"{error_text}")],
             "iteration": iteration
         }
