@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CogniTree — Stateful Decision Tree Agent</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar Navigation -->
+    <sidebar>
+      <div>
+        <div class="brand-header">
+          <div class="brand-icon">🌿</div>
+          <span>CogniTree</span>
+        </div>
+
+        <nav class="sidebar-nav">
+          <div class="nav-item active">
+            💬 Agent Chat Workspace
+          </div>
+          <div class="nav-item" id="nav-new-thread">
+            ➕ New Conversation
+          </div>
+          <div class="nav-item" id="nav-toggle-tree">
+            🌿 Decision Tree Canvas
+          </div>
+        </nav>
+      </div>
+
+      <div class="status-card">
+        <div class="status-badge">
+          <span class="status-dot"></span>
+          <span>qwen2.5:7b (Ollama Local)</span>
+        </div>
+        <div style="color: var(--muted-foreground);">
+          FastAPI Backend: <strong>Connected</strong>
+        </div>
+      </div>
+    </sidebar>
+
+    <!-- Main Workspace Area -->
+    <main>
+      <!-- Top Header -->
+      <header>
+        <div class="header-title">
+          Decision Tree Agent Workspace
+        </div>
+        <div class="header-actions">
+          <button class="btn" id="btn-toggle-panel">
+            🌿 Toggle Tree Canvas
+          </button>
+        </div>
+      </header>
+
+      <!-- Workspace Split Layout -->
+      <div class="workspace-split">
+        <!-- Chat Pane -->
+        <div class="chat-pane">
+          <div class="chat-messages" id="chat-messages">
+            <div class="message-wrapper assistant">
+              <div class="avatar assistant">CT</div>
+              <div class="message-content">
+                👋 Welcome to <strong>CogniTree</strong>! All your messages are tracked as state nodes on the decision tree. Ask any question or request a tool action to get started.
+              </div>
+            </div>
+          </div>
+
+          <div class="input-pane">
+            <div class="input-box">
+              <textarea id="prompt-input" placeholder="Ask CogniTree a question or request code..."></textarea>
+              <button class="btn btn-primary" id="send-button">
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Decision Tree Pane -->
+        <div class="tree-pane" id="tree-pane">
+          <div class="tree-header">
+            <span style="font-weight: 600; font-size: 0.9rem;">🌿 Decision Tree Canvas</span>
+            <span style="font-size: 0.75rem; color: var(--muted-foreground);">Click node to rewind state</span>
+          </div>
+          <div class="tree-viewport" id="tree-viewport">
+            <svg id="tree-svg">
+              <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"/>
+                </marker>
+              </defs>
+              <g id="tree-root-group"></g>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="tree.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
