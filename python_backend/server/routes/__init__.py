@@ -1,0 +1,3 @@
+"""
+Server routes initialization.
+"""
