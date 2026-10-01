@@ -7,6 +7,7 @@ from typing import Any, Optional, Dict, List
 from langchain_core.messages import BaseMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.memory import MemorySaver
 
 from python_backend.logger import setup_logger
 from python_backend.engine.state import AgentState
@@ -52,7 +53,7 @@ def build_graph(checkpointer: Optional[Any] = None) -> Any:
     return compiled
 
 
-compiled_graph = build_graph()
+compiled_graph = build_graph(checkpointer=MemorySaver())
 
 
 def set_compiled_graph(graph: Any) -> None:

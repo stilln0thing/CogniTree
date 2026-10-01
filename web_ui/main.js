@@ -4,7 +4,9 @@
 
 // ── Config ──────────────────────────────────────────────────────────────────
 const WS_URL      = `ws://${window.location.hostname || 'localhost'}:8765/ws`;
-const THREAD_ID   = 'default';
+const createThreadId = () => window.crypto?.randomUUID?.()
+  || `thread-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+let THREAD_ID = createThreadId();
 const RECONNECT_DELAY_MS = 3000;
 
 // ── DOM refs ─────────────────────────────────────────────────────────────────
@@ -70,6 +72,7 @@ closeCanvasBtn.addEventListener('click', closeCanvas);
 newThreadBtn.addEventListener('click', resetChat);
 
 function resetChat() {
+  THREAD_ID = createThreadId();
   messageStream.innerHTML = '';
   messageStream.appendChild(greeting);
   greeting.style.display = '';
