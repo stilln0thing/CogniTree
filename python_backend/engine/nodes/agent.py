@@ -12,6 +12,7 @@ from langchain_core.runnables import RunnableConfig
 from python_backend.logger import setup_logger
 from python_backend.engine.state import AgentState
 from python_backend.tools.registry import OPENAI_TOOL_SCHEMAS
+from python_backend.server.dependencies import record_token_usage
 
 logger = setup_logger("cognitree.engine.nodes.agent")
 
@@ -93,6 +94,20 @@ async def agent_node(state: AgentState, config: Optional[RunnableConfig] = None)
             tools=OPENAI_TOOL_SCHEMAS,
             tool_choice="auto"
         )
+
+        usage = getattr(response, "usage", None)
+        if usage is not None:
+            prompt_tokens = getattr(usage, "prompt_tokens", None)
+            completion_tokens = getattr(usage, "completion_tokens", None)
+            if isinstance(prompt_tokens, int) and isinstance(completion_tokens, int):
+                record_token_usage(prompt_tokens, completion_tokens)
+                logger.info(
+                    "Recorded token usage: prompt=%d, completion=%d",
+                    prompt_tokens,
+                    completion_tokens,
+                )
+        else:
+            logger.info("Model response did not include token usage; telemetry was not updated.")
 
         resp_msg = response.choices[0].message
         ai_content = resp_msg.content or ""
