@@ -11,6 +11,7 @@ from langchain_core.runnables import RunnableConfig
 
 from python_backend.logger import setup_logger
 from python_backend.engine.state import AgentState
+from python_backend.engine.pruner import prune_context
 from python_backend.tools.registry import OPENAI_TOOL_SCHEMAS
 from python_backend.server.dependencies import record_token_usage
 
@@ -50,6 +51,9 @@ async def agent_node(state: AgentState, config: Optional[RunnableConfig] = None)
     
     if not messages or not isinstance(messages[0], SystemMessage):
         messages.insert(0, SystemMessage(content=SYSTEM_PROMPT))
+
+    # removed nosiy failed tool outputs from context before model call
+    messages = prune_context(messages)
 
     queue = None
     if config:
