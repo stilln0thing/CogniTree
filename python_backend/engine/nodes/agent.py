@@ -91,49 +91,76 @@ async def agent_node(state: AgentState, config: Optional[RunnableConfig] = None)
                     "content": msg.content
                 })
 
-        logger.info("Invoking model '%s' with %d messages and %d registered tool schemas.", model_name, len(oai_messages), len(OPENAI_TOOL_SCHEMAS))
-        response = await client.chat.completions.create(
+        logger.info("Invoking model '%s' with %d messages and %d registered tool schemas (streaming=True).", model_name, len(oai_messages), len(OPENAI_TOOL_SCHEMAS))
+
+        # ── True token-by-token streaming ─────────────────────────────────────
+        stream = await client.chat.completions.create(
             model=model_name,
             messages=oai_messages,
             tools=OPENAI_TOOL_SCHEMAS,
-            tool_choice="auto"
+            tool_choice="auto",
+            stream=True,
+            stream_options={"include_usage": True},  # Token usage arrives in final chunk
         )
 
-        usage = getattr(response, "usage", None)
-        if usage is not None:
-            prompt_tokens = getattr(usage, "prompt_tokens", None)
-            completion_tokens = getattr(usage, "completion_tokens", None)
-            if isinstance(prompt_tokens, int) and isinstance(completion_tokens, int):
-                record_token_usage(prompt_tokens, completion_tokens)
-                logger.info(
-                    "Recorded token usage: prompt=%d, completion=%d",
-                    prompt_tokens,
-                    completion_tokens,
-                )
+        ai_content = ""
+        # Accumulate tool call argument fragments streamed across multiple chunks
+        # Structure: { chunk_index: {"id": str, "name": str, "args_buf": str} }
+        tool_call_accum: Dict[int, Dict[str, Any]] = {}
+        prompt_tokens = 0
+        completion_tokens = 0
+
+        async for chunk in stream:
+            # ── Token usage (only populated in the final sentinel chunk) ──────
+            if hasattr(chunk, "usage") and chunk.usage:
+                prompt_tokens = getattr(chunk.usage, "prompt_tokens", 0) or 0
+                completion_tokens = getattr(chunk.usage, "completion_tokens", 0) or 0
+
+            if not chunk.choices:
+                continue
+
+            delta = chunk.choices[0].delta
+
+            # ── Stream text content tokens to queue immediately ───────────────
+            if delta.content:
+                ai_content += delta.content
+                if can_enqueue:
+                    await queue.put(("token", delta.content))
+
+            # ── Accumulate streamed tool call argument fragments ───────────────
+            if delta.tool_calls:
+                for tc_chunk in delta.tool_calls:
+                    idx = tc_chunk.index
+                    if idx not in tool_call_accum:
+                        tool_call_accum[idx] = {"id": "", "name": "", "args_buf": ""}
+                    if tc_chunk.id:
+                        tool_call_accum[idx]["id"] = tc_chunk.id
+                    if tc_chunk.function and tc_chunk.function.name:
+                        tool_call_accum[idx]["name"] = tc_chunk.function.name
+                    if tc_chunk.function and tc_chunk.function.arguments:
+                        tool_call_accum[idx]["args_buf"] += tc_chunk.function.arguments
+
+        # ── Record token usage telemetry ──────────────────────────────────────
+        if prompt_tokens > 0 or completion_tokens > 0:
+            record_token_usage(prompt_tokens, completion_tokens)
+            logger.info("Recorded token usage: prompt=%d, completion=%d", prompt_tokens, completion_tokens)
         else:
             logger.info("Model response did not include token usage; telemetry was not updated.")
 
-        resp_msg = response.choices[0].message
-        ai_content = resp_msg.content or ""
+        # ── Reconstruct full tool_calls from accumulated stream fragments ──────
         tool_calls = []
+        for idx in sorted(tool_call_accum.keys()):
+            entry = tool_call_accum[idx]
+            try:
+                parsed_args = json.loads(entry["args_buf"]) if entry["args_buf"] else {}
+            except Exception:
+                parsed_args = {}
+            tool_calls.append({"id": entry["id"], "name": entry["name"], "args": parsed_args})
 
-        if resp_msg.tool_calls:
-            for tc in resp_msg.tool_calls:
-                try:
-                    parsed_args = json.loads(tc.function.arguments)
-                except Exception:
-                    parsed_args = {}
-                tool_calls.append({
-                    "id": tc.id,
-                    "name": tc.function.name,
-                    "args": parsed_args
-                })
+        if tool_calls:
             logger.info("Model requested tool execution for tools: %s", [tc["name"] for tc in tool_calls])
 
-        if can_enqueue and ai_content:
-            await queue.put(("token", ai_content))
-
-        logger.info("agent_node completed successfully. Response length: %d chars.", len(ai_content))
+        logger.info("agent_node completed successfully (streaming). Response length: %d chars.", len(ai_content))
         return {
             "messages": [AIMessage(content=ai_content, tool_calls=tool_calls)],
             "iteration": iteration

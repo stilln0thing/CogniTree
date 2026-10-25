@@ -34,6 +34,9 @@ let isConnected         = false;
 let currentAssistantEl  = null;   // The .msg-bubble div being streamed into
 let currentToolCards    = {};     // keyed by tool name, value is {card, bodyEl, statusEl}
 let greetingVisible     = true;
+// Tracks active thread and last checkpoint for time-travel branching
+let activeThreadId      = THREAD_ID;
+let currentCheckpointId = null;   // node id of the last canvas node (= checkpoint key passed to backend)
 
 // ── Navigation ────────────────────────────────────────────────────────────────
 function showChat() {
@@ -79,6 +82,9 @@ function resetChat() {
   greetingVisible = true;
   currentAssistantEl = null;
   currentToolCards = {};
+  // Reset branch tracking so the new thread starts fresh
+  activeThreadId      = THREAD_ID;
+  currentCheckpointId = null;
   if (window.treeCanvas) window.treeCanvas.reset();
   if (canvasEmpty) canvasEmpty.style.display = '';
 }
@@ -374,34 +380,47 @@ function scrollToBottom() {
 }
 
 // ── Send message ──────────────────────────────────────────────────────────────
-function sendMessage() {
-  const text = promptInput.value.trim();
+function sendMessage(overrideText, overrideThreadId, overrideCheckpointId) {
+  const text     = overrideText    !== undefined ? overrideText    : promptInput.value.trim();
+  const threadId = overrideThreadId !== undefined ? overrideThreadId : activeThreadId;
+  const checkId  = overrideCheckpointId !== undefined ? overrideCheckpointId : currentCheckpointId;
+
   if (!text || !isConnected) return;
 
   appendUserMessage(text);
 
-  // Add node to decision tree canvas
+  // Add node to decision tree canvas; track its id as the active checkpoint
   if (window.treeCanvas) {
-    window.treeCanvas.addNode(Date.now().toString(), text);
+    const nodeId   = Date.now().toString();
+    const parentId = checkId || null;
+    window.treeCanvas.addNode(nodeId, text, parentId);
+    currentCheckpointId = nodeId;  // Descendent messages branch from this node
     if (canvasEmpty) canvasEmpty.style.display = 'none';
   }
 
   currentAssistantEl = null;
 
   socket.send(JSON.stringify({
-    type:      'chat',
-    prompt:    text,
-    thread_id: THREAD_ID,
+    type:          'chat',
+    prompt:        text,
+    thread_id:     threadId,
+    checkpoint_id: checkId,
   }));
 
-  promptInput.value = '';
-  promptInput.style.height = 'auto';
-  updateSendBtn();
+  // Only clear the main textarea if this was a normal (non-branch) send
+  if (overrideText === undefined) {
+    promptInput.value = '';
+    promptInput.style.height = 'auto';
+    updateSendBtn();
+  }
   scrollToBottom();
 }
 
 // ── Time-travel node click callback (called by tree.js) ──────────────────────
 window.onNodeSelect = (node) => {
+  // Each branch gets its own LangGraph thread so it never pollutes the original
+  const branchThreadId = 'branch_' + node.id;
+
   const group = document.createElement('div');
   group.className = 'msg-group';
 
@@ -417,7 +436,22 @@ window.onNodeSelect = (node) => {
 
   const ttCard = document.createElement('div');
   ttCard.className = 'timetravel-card';
-  ttCard.innerHTML = `<strong>Time-traveled</strong> to checkpoint: "${node.label}"<br><span style="opacity:.7;font-size:.75rem">State snapshot restored. You can now branch from this point.</span>`;
+  ttCard.innerHTML = `
+    <strong>&#9203; Time-traveled</strong> to checkpoint: "${node.label}"<br>
+    <span style="opacity:.7;font-size:.75rem">Branching on thread <code>${branchThreadId}</code> &mdash; type a new prompt below to fork from this state.</span><br><br>
+    <div style="display:flex;gap:.5rem;margin-top:.5rem">
+      <input
+        id="branch-input-${node.id}"
+        type="text"
+        placeholder="Ask something from this checkpoint..."
+        style="flex:1;padding:.45rem .75rem;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:inherit;font-size:.85rem;outline:none;"
+      />
+      <button
+        id="branch-send-${node.id}"
+        style="padding:.45rem 1rem;border-radius:8px;background:#7c6ee0;color:#fff;border:none;cursor:pointer;font-size:.85rem;font-weight:500;"
+      >Branch &#x2192;</button>
+    </div>
+  `;
 
   body.appendChild(ttCard);
   row.appendChild(avatar);
@@ -425,6 +459,25 @@ window.onNodeSelect = (node) => {
   group.appendChild(row);
   messageStream.appendChild(group);
   scrollToBottom();
+
+  // Wire the branch prompt input
+  const branchInput = document.getElementById('branch-input-' + node.id);
+  const branchBtn   = document.getElementById('branch-send-' + node.id);
+
+  const fireBranch = () => {
+    const branchPrompt = branchInput ? branchInput.value.trim() : '';
+    if (!branchPrompt || !isConnected) return;
+
+    // Switch the active context to the new branch thread
+    activeThreadId      = branchThreadId;
+    currentCheckpointId = node.id;
+
+    sendMessage(branchPrompt, branchThreadId, node.id);
+    if (branchInput) branchInput.value = '';
+  };
+
+  if (branchBtn)   branchBtn.addEventListener('click', fireBranch);
+  if (branchInput) branchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') fireBranch(); });
 };
 
 // ── Init ──────────────────────────────────────────────────────────────────────
